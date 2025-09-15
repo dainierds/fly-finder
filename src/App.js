@@ -4,28 +4,83 @@ import './index.css';
 function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({});
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('');
+
+  // Your backend URL - you can change this to localhost:3000 for local development
+  const API_URL = 'https://friendly-disco-g69px4vv79x3975r-3000.app.github.dev';
+
+  // Store configurations matching your backend
+  const stores = [
+    { id: 'iml-home', name: 'IML Home', color: 'bg-blue-600' },
+    { id: 'wesco', name: 'Wesco', color: 'bg-orange-600' },
+    { id: 'banner-solutions', name: 'Banner Solutions', color: 'bg-red-600' },
+    { id: 'seclock', name: 'SECLOCK', color: 'bg-gray-700' },
+    { id: 'door-controls-usa', name: 'Door Controls USA', color: 'bg-green-600' },
+    { id: 'systems-depot', name: 'The Systems Depot Inc', color: 'bg-purple-600' },
+    { id: 'adi-global', name: 'ADI Global', color: 'bg-indigo-600' },
+    { id: 'silmar-electronics', name: 'Silmar Electronics', color: 'bg-teal-600' }
+  ];
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
     
     setLoading(true);
+    setError(null);
+    setResults({});
+    setActiveTab('');
     
-    // Simulate API call
-    setTimeout(() => {
-      setResults([
-        { id: 1, name: 'Electronic Component A', price: '$25.99', store: 'Store 1' },
-        { id: 2, name: 'Security Camera B', price: '$89.99', store: 'Store 2' },
-        { id: 3, name: 'Door Lock C', price: '$45.50', store: 'Store 3' }
-      ]);
+    try {
+      console.log(`Searching for: ${searchTerm}`);
+      console.log(`API URL: ${API_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+      
+      const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add CORS mode
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      
+      setResults(data);
+      
+      // Set the first store with results as active tab
+      const storesWithResults = Object.keys(data).filter(storeId => data[storeId] && data[storeId].length > 0);
+      if (storesWithResults.length > 0) {
+        setActiveTab(storesWithResults[0]);
+      }
+
+    } catch (err) {
+      console.error('Search error:', err);
+      setError(`Error connecting to backend: ${err.message}. Make sure your backend is running at ${API_URL}`);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  const getTotalResults = () => {
+    return Object.values(results).reduce((total, storeResults) => {
+      return total + (Array.isArray(storeResults) ? storeResults.length : 0);
+    }, 0);
+  };
+
+  const getStoresWithResults = () => {
+    return stores.filter(store => results[store.id] && Array.isArray(results[store.id]) && results[store.id].length > 0);
   };
 
   return (
@@ -43,13 +98,13 @@ function App() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Search Section */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <div className="relative">
             <input
               type="text"
-              placeholder="Search for electronic parts, security equipment..."
+              placeholder="Search for arduino, raspberry pi, sensors..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -64,6 +119,10 @@ function App() {
               {loading ? 'Searching...' : 'Search'}
             </button>
           </div>
+          
+          <div className="mt-4 text-sm text-gray-500 text-center">
+            Backend: {API_URL}
+          </div>
         </div>
 
         {/* Loading State */}
@@ -74,61 +133,123 @@ function App() {
           </div>
         )}
 
-        {/* Results */}
-        {!loading && results.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Search Results ({results.length} items)
-            </h2>
-            <div className="grid gap-4">
-              {results.map((item) => (
-                <div key={item.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {item.name}
-                      </h3>
-                      <p className="text-gray-600">Available at {item.store}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-2xl font-bold text-green-600">
-                        {item.price}
-                      </span>
-                      <br />
-                      <button className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {/* Error State */}
+        {error && (
+          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h3 className="text-red-800 font-semibold mb-2">Connection Error</h3>
+              <p className="text-red-700">{error}</p>
             </div>
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && searchTerm && results.length === 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="text-gray-400 text-6xl mb-4">?</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No results found
-            </h3>
-            <p className="text-gray-600">
-              Try different search terms or check spelling
-            </p>
+        {/* Results */}
+        {!loading && Object.keys(results).length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Search Results
+              </h2>
+              <p className="text-gray-600">
+                Found {getTotalResults()} products in {getStoresWithResults().length} stores
+              </p>
+            </div>
+
+            {/* Store Tabs */}
+            {getStoresWithResults().length > 0 && (
+              <div className="mb-6">
+                <div className="border-b border-gray-200">
+                  <nav className="flex space-x-1 overflow-x-auto pb-2">
+                    {getStoresWithResults().map((store) => (
+                      <button
+                        key={store.id}
+                        onClick={() => setActiveTab(store.id)}
+                        className={`flex-shrink-0 py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 ${
+                          activeTab === store.id
+                            ? `${store.color} text-white`
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {store.name}
+                        <span className="ml-2 px-2 py-1 text-xs bg-white bg-opacity-20 rounded-full">
+                          {results[store.id]?.length || 0}
+                        </span>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+              </div>
+            )}
+
+            {/* Products Grid */}
+            {activeTab && results[activeTab] && Array.isArray(results[activeTab]) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {results[activeTab].map((product, index) => (
+                  <div key={product.id || index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+                    <div className="mb-4">
+                      {product.image && (
+                        <img
+                          src={product.image}
+                          alt={product.title || product.name}
+                          className="w-full h-48 object-cover rounded-lg"
+                          onError={(e) => e.target.style.display = 'none'}
+                        />
+                      )}
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                      {product.title || product.name || 'Product'}
+                    </h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-green-600">
+                        {product.price || 'Price not available'}
+                      </span>
+                      {product.url && (
+                        <a
+                          href={product.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm"
+                        >
+                          View Product
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Available at {product.store || activeTab}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* No results for search */}
+            {getTotalResults() === 0 && (
+              <div className="text-center py-8">
+                <div className="text-gray-400 text-4xl mb-4">?</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No products found
+                </h3>
+                <p className="text-gray-600">
+                  Try different search terms like "arduino", "sensor", or "camera"
+                </p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Welcome State */}
-        {!searchTerm && !loading && results.length === 0 && (
+        {!searchTerm && !loading && Object.keys(results).length === 0 && !error && (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
             <div className="text-blue-600 text-6xl mb-4">+</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Ready to Search
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               Enter a product name or part number to get started
             </p>
+            <div className="text-sm text-gray-500">
+              Try searching for: arduino, raspberry pi, door lock, camera
+            </div>
           </div>
         )}
       </div>
