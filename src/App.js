@@ -51,10 +51,36 @@ function App() {
       const data = await response.json();
       console.log('API Response:', data);
       
-      setResults(data);
+      // Transform backend response to frontend format
+      const transformedResults = {};
+      if (data.results && Array.isArray(data.results)) {
+        data.results.forEach(result => {
+          if (result.success && result.data && result.data.products) {
+            // Map site names to store IDs
+            const siteMapping = {
+              'Door Controls USA': 'door-controls-usa',
+              'SDEPOT': 'systems-depot',
+              'Silmar Electronics': 'silmar-electronics',
+              'ADI Global': 'adi-global',
+              'IMLSS': 'iml-home',
+              'Wesco': 'wesco',
+              'Banner Solutions': 'banner-solutions',
+              'SecLock': 'seclock'
+            };
+            
+            const storeId = siteMapping[result.site] || result.site.toLowerCase().replace(/\s+/g, '-');
+            transformedResults[storeId] = result.data.products;
+          }
+        });
+      }
+      
+      console.log('Transformed Results:', transformedResults);
+      setResults(transformedResults);
       
       // Set the first store with results as active tab
-      const storesWithResults = Object.keys(data).filter(storeId => data[storeId] && data[storeId].length > 0);
+      const storesWithResults = Object.keys(transformedResults).filter(storeId => 
+        transformedResults[storeId] && Array.isArray(transformedResults[storeId]) && transformedResults[storeId].length > 0
+      );
       if (storesWithResults.length > 0) {
         setActiveTab(storesWithResults[0]);
       }
