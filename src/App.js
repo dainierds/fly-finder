@@ -1,6 +1,14 @@
 import React from 'react';
 
 function App() {
+  const handleTestReact = () => {
+    document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>🎉 JavaScript Events Working!</h1><p>React is fully functional.</p></div>';
+  };
+
+  const handleReload = () => {
+    window.location.reload();
+  };
+
   return (
     <div style={{
       padding: '20px',
@@ -73,9 +81,7 @@ function App() {
               cursor: 'pointer',
               marginRight: '10px'
             }}
-            onClick={() => {
-              document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>🎉 JavaScript Events Working!</h1><p>React is fully functional.</p></div>';
-            }}
+            onClick={handleTestReact}
           >
             Test React Events
           </button>
@@ -90,9 +96,7 @@ function App() {
               fontSize: '16px',
               cursor: 'pointer'
             }}
-            onClick={() => {
-              window.location.reload();
-            }}
+            onClick={handleReload}
           >
             Reload Page
           </button>
@@ -106,7 +110,7 @@ function App() {
           border: '1px solid #c3e6cb'
         }}>
           <p style={{color: '#155724', margin: 0, textAlign: 'center'}}>
-            <strong>Success!</strong> Your Vercel deployment is working correctly.
+            <strong>Success!</strong> Your deployment is working correctly.
           </p>
         </div>
       </div>
