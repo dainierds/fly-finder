@@ -32,8 +32,8 @@ function App() {
     setActiveTab('');
     
     try {
-      console.log(`Starting streaming search for: ${searchTerm}`);
-      console.log(`API URL: ${API_URL}/search-stream?q=${encodeURIComponent(searchTerm)}`);
+      console.log(`Starting search for: ${searchTerm}`);
+      console.log(`API URL: ${API_URL}/search?q=${encodeURIComponent(searchTerm)}`);
       
       const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(searchTerm)}`, {
         method: 'GET',
@@ -49,6 +49,7 @@ function App() {
 
       const data = await response.json();
       console.log('API Response:', data);
+      console.log('Raw response data structure:', JSON.stringify(data, null, 2));
       
       // Transform backend response to frontend format
       const transformedResults = {};
