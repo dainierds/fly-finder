@@ -9,8 +9,8 @@ function App() {
   const [activeTab, setActiveTab] = useState('');
 
   // Your GitHub Codespaces URL
-  const API_URL = 'https://parts-finder-backend.vercel.app';
-
+  const API_URL = 'https://parts-finder-backend.onrender.com';
+  
   // Store configurations matching Flutter app
   const stores = [
     { id: 'door-controls-usa', name: 'Door Controls USA', color: 'bg-blue-600' },
