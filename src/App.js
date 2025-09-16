@@ -8,12 +8,12 @@ function App() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('');
 
-  // Your GitHub Codespaces URL
+  // Your Railway backend URL
   const API_URL = 'https://parts-finder-backend-production.up.railway.app';
   
   // Store configurations matching Flutter app
   const stores = [
-    { id: 'door-controls-usa', name: 'Door Controls USA', color: 'bg-blue-600' },
+    { id: 'doorcontrols', name: 'Door Controls USA', color: 'bg-blue-600' },
     { id: 'sdepot', name: 'SDEPOT', color: 'bg-orange-600' },
     { id: 'silmar', name: 'Silmar Electronics', color: 'bg-red-600' },
     { id: 'adiglobal', name: 'ADI Global', color: 'bg-gray-700' },
@@ -56,6 +56,18 @@ function App() {
       if (data.results && Array.isArray(data.results)) {
         data.results.forEach(result => {
           if (result.success && result.data && result.data.products) {
+            // Map site names to store IDs
+            const siteMapping = {
+              'Door Controls USA': 'doorcontrols',
+              'SDEPOT': 'sdepot',
+              'Silmar Electronics': 'silmar',
+              'ADI Global': 'adiglobal',
+              'IMLSS': 'imlss',
+              'Wesco': 'wesco',
+              'Banner Solutions': 'bannersolutions',
+              'Seclock': 'seclock'
+            };
+            
             const storeId = siteMapping[result.site] || result.site.toLowerCase().replace(/\s+/g, '');
             transformedResults[storeId] = result.data.products;
           }
@@ -64,7 +76,6 @@ function App() {
       
       console.log('Transformed Results:', transformedResults);
       setResults(transformedResults);
-      }
       
       // Set the first store with results as active tab
       const storesWithResults = Object.keys(transformedResults).filter(storeId => 
@@ -127,7 +138,7 @@ function App() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search for tools, arduino, sensors..."
+              placeholder="Search for tools, locks, sensors..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -218,7 +229,7 @@ function App() {
                 {results[activeTab].map((product, index) => (
                   <div key={product.sku || product.id || index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
                     <div className="mb-4">
-                      {product.image && (
+                      {product.image && product.image !== "" && (
                         <img
                           src={product.image}
                           alt={product.name}
@@ -233,7 +244,7 @@ function App() {
                     {product.sku && (
                       <p className="text-sm text-gray-500 mb-2">SKU: {product.sku}</p>
                     )}
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mb-2">
                       <span className="text-xl font-bold text-green-600">
                         {product.price || 'Price not available'}
                       </span>
@@ -248,7 +259,10 @@ function App() {
                         </a>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">
+                    {product.description && (
+                      <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+                    )}
+                    <p className="text-sm text-gray-500">
                       Available at {product.site || activeTab}
                     </p>
                   </div>
@@ -282,7 +296,7 @@ function App() {
               Enter a product name or part number to get started
             </p>
             <div className="text-sm text-gray-500">
-              Try searching for: arduino, tools, sensors, cameras
+              Try searching for: lock, cylinder, security, tools
             </div>
           </div>
         )}
