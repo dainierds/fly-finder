@@ -64,6 +64,7 @@ function App() {
       
       console.log('Transformed Results:', transformedResults);
       setResults(transformedResults);
+      }
       
       // Set the first store with results as active tab
       const storesWithResults = Object.keys(transformedResults).filter(storeId => 
