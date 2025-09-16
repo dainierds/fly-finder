@@ -56,27 +56,8 @@ function App() {
       if (data.results && Array.isArray(data.results)) {
         data.results.forEach(result => {
           if (result.success && result.data && result.data.products) {
-            // Filter products that contain search term (like Flutter app does)
-            const filteredProducts = result.data.products.filter(product => 
-              product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            
-            if (filteredProducts.length > 0) {
-              // Map site names to store IDs
-              const siteMapping = {
-                'Door Controls USA': 'doorcontrols',
-                'SDEPOT': 'sdepot',
-                'Silmar Electronics': 'silmar',
-                'ADI Global': 'adiglobal',
-                'IMLSS': 'imlss',
-                'Wesco': 'wesco',
-                'Banner Solutions': 'bannersolutions',
-                'Seclock': 'seclock'
-              };
-              
-              const storeId = siteMapping[result.site] || result.site.toLowerCase().replace(/\s+/g, '');
-              transformedResults[storeId] = filteredProducts;
-            }
+            const storeId = siteMapping[result.site] || result.site.toLowerCase().replace(/\s+/g, '');
+            transformedResults[storeId] = result.data.products;
           }
         });
       }
