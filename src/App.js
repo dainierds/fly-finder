@@ -35,69 +35,63 @@ function App() {
       console.log(`Starting streaming search for: ${searchTerm}`);
       console.log(`API URL: ${API_URL}/search-stream?q=${encodeURIComponent(searchTerm)}`);
       
-      const eventSource = new EventSource(`${API_URL}/search-stream?q=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
       
-      eventSource.onopen = function(event) {
-        console.log('EventSource connection opened');
-      };
-      
-      eventSource.onmessage = function(event) {
-        try {
-          console.log('Raw event data:', event.data);
-          const data = JSON.parse(event.data);
-          console.log('Parsed event:', data);
-          
-          if (data.event === 'start') {
-            console.log('Search started');
-            return;
-          }
-          
-          if (data.event === 'close') {
-            console.log('Search completed');
-            setLoading(false);
-            eventSource.close();
-            return;
-          }
-          
-          // Handle site results
-          const siteData = data.data;
-          if (siteData && siteData.success && siteData.data && siteData.data.products && siteData.data.products.length > 0) {
-            console.log(`Received ${siteData.data.products.length} products from ${siteData.site}`);
-            
+      // Transform backend response to frontend format
+      const transformedResults = {};
+      if (data.results && Array.isArray(data.results)) {
+        data.results.forEach(result => {
+          if (result.success && result.data && result.data.products) {
             // Filter products that contain search term (like Flutter app does)
-            const filteredProducts = siteData.data.products.filter(product => 
+            const filteredProducts = result.data.products.filter(product => 
               product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
             
             if (filteredProducts.length > 0) {
-              setResults(prevResults => {
-                const siteKey = data.event || siteData.site.toLowerCase().replace(/\s+/g, '');
-                const newResults = {
-                  ...prevResults,
-                  [siteKey]: filteredProducts
-                };
-                
-                // Set first store with results as active tab
-                if (!activeTab && Object.keys(newResults).length === 1) {
-                  setActiveTab(siteKey);
-                }
-                
-                return newResults;
-              });
+              // Map site names to store IDs
+              const siteMapping = {
+                'Door Controls USA': 'doorcontrols',
+                'SDEPOT': 'sdepot',
+                'Silmar Electronics': 'silmar',
+                'ADI Global': 'adiglobal',
+                'IMLSS': 'imlss',
+                'Wesco': 'wesco',
+                'Banner Solutions': 'bannersolutions',
+                'Seclock': 'seclock'
+              };
+              
+              const storeId = siteMapping[result.site] || result.site.toLowerCase().replace(/\s+/g, '');
+              transformedResults[storeId] = filteredProducts;
             }
           }
-          
-        } catch (parseError) {
-          console.error('Error parsing event data:', parseError, event.data);
-        }
-      };
+        });
+      }
       
-      eventSource.onerror = function(event) {
-        console.error('EventSource error:', event);
-        setError(`Connection error. Make sure your backend is running at ${API_URL}`);
-        setLoading(false);
-        eventSource.close();
-      };
+      console.log('Transformed Results:', transformedResults);
+      setResults(transformedResults);
+      
+      // Set the first store with results as active tab
+      const storesWithResults = Object.keys(transformedResults).filter(storeId => 
+        transformedResults[storeId] && Array.isArray(transformedResults[storeId]) && transformedResults[storeId].length > 0
+      );
+      if (storesWithResults.length > 0) {
+        setActiveTab(storesWithResults[0]);
+      }
+      
+      setLoading(false);
 
     } catch (err) {
       console.error('Search error:', err);
@@ -167,7 +161,7 @@ function App() {
           </div>
           
           <div className="mt-4 text-sm text-gray-500 text-center">
-            Using streaming search from: {API_URL}
+            Backend: {API_URL}
           </div>
         </div>
 
