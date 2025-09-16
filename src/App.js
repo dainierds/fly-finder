@@ -9,7 +9,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('');
 
   // Your GitHub Codespaces URL
-  const API_URL = 'https://friendly-disco-g69px4vv79x3975r-3000.app.github.dev';
+  const API_URL = 'https://parts-finder-backend.vercel.app';
 
   // Store configurations matching Flutter app
   const stores = [
