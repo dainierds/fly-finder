@@ -9,7 +9,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('');
 
   // Your GitHub Codespaces URL
-  const API_URL = 'https://parts-finder-backend.onrender.com';
+  const API_URL = 'https://parts-finder-backend-production.up.railway.app';
   
   // Store configurations matching Flutter app
   const stores = [
